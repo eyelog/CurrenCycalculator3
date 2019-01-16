@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">CurrencyCalculator3</string>
+    <string name="current_from">Пересчитать из:</string>
+    <string name="current_to">Впересчитать в:</string>
+    <string name="cur_list">Список валют</string>
+    <string name="cur_culc">Калькулятор валют</string>
+    <string name="cur_list_cut">Список</string>
+    <string name="cur_culc_cut">Калькулятор</string>
+    <string name="currency">Currency</string>
+</resources>

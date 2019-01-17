@@ -21,7 +21,6 @@ public class ValuteTO {
     }
 
     public ValuteTO(String xmlID, String numCode, String charCode, String nominal, String name, String value) {
-        this.id = id;
         this.xmlID = xmlID;
         NumCode = numCode;
         CharCode = charCode;

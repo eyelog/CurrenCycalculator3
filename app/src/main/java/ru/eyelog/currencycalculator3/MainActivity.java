@@ -1,6 +1,8 @@
 package ru.eyelog.currencycalculator3;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -19,10 +21,19 @@ import java.util.List;
 import ru.eyelog.currencycalculator3.adapters.AdapterPopupWindow;
 import ru.eyelog.currencycalculator3.util_net.ValuteTO;
 
+// TODO make counting logic
+// TODO and make some test =)
 public class MainActivity extends MvpAppCompatActivity implements ViewState {
+
+    public static final String SP_CURRENCY_LOC = "curcurrency";
+    public static final String SP_CUR_FROM = "currencyfrom";
+    public static final String SP_CUR_TO = "currencyto";
 
     @InjectPresenter
     Presenter presenter;
+
+    SharedPreferences curPreference;
+    SharedPreferences.Editor editor;
 
     Button buttonFrom, buttonTo;
 
@@ -32,7 +43,9 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
 
     AdapterPopupWindow adapter;
 
-    List<ValuteTO> data;
+    List<ValuteTO> data, tempData;
+    ValuteTO valuteFrom, valuteTo, valuteTemp;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +56,8 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
         buttonTo = findViewById(R.id.bt_currentTo);
 
         presenter.getCurrencyList();
+        curPreference = getSharedPreferences(SP_CURRENCY_LOC, Context.MODE_PRIVATE);
+        editor = curPreference.edit();
 
         buttonFrom.setOnClickListener(v -> showPopup(true));
         buttonTo.setOnClickListener(v -> showPopup(false));
@@ -65,14 +80,46 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
 
         adapter = new AdapterPopupWindow(this, data);
         listView.setAdapter(adapter);
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            String stTempXmlID;
+            if(doFrom){
+                valuteFrom = data.get(position);
+                stTempXmlID = valuteFrom.getXmlID();
+                editor.putString(SP_CUR_FROM, stTempXmlID);
+                buttonFrom.setText(valuteFrom.getName());
+            }else {
+                valuteTo = data.get(position);
+                stTempXmlID = valuteTo.getXmlID();
+                editor.putString(SP_CUR_TO, stTempXmlID);
+                buttonTo.setText(valuteTo.getName());
+            }
+            editor.apply();
+            refreshTheList(doFrom, stTempXmlID);
+            popupWindow.dismiss();
+        });
 
         popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
 //        popupWindow.update();
     }
 
+    private void refreshTheList(boolean doFrom, String xmlID){
+        for (int i = 0; i < data.size(); i++) {
+            if(data.get(i).getXmlID().equals(xmlID)){
+                if(doFrom){
+                    valuteTemp = valuteFrom;
+                }else {
+                    valuteTemp = valuteTo;
+                }
+                data.remove(i);
+                data.add(i, valuteTemp);
+            }
+        }
+    }
+
     @Override
     public void setCurses(List<ValuteTO> valuteTOS) {
         data = valuteTOS;
+        tempData = valuteTOS;
 
 //        Toast.makeText(this, data.get(0).getName(), Toast.LENGTH_SHORT).show();
     }

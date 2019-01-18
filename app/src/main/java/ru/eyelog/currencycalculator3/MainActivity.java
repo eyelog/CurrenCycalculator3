@@ -6,9 +6,8 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.method.KeyListener;
+import android.text.TextWatcher;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
@@ -23,11 +22,10 @@ import com.arellomobile.mvp.presenter.InjectPresenter;
 
 import java.util.List;
 
-import io.reactivex.Observable;
-import io.reactivex.Observer;
 import ru.eyelog.currencycalculator3.adapters.AdapterPopupWindow;
 import ru.eyelog.currencycalculator3.util_net.ValuteTO;
 
+// TODO set default values
 // TODO make counting logic
 // TODO and make some test =)
 public class MainActivity extends MvpAppCompatActivity implements ViewState {
@@ -56,9 +54,7 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
     List<ValuteTO> data, tempData;
     ValuteTO valuteFrom, valuteTo, valuteTemp;
 
-    Observable<Integer> observable;
-    Observer<Integer> observer;
-
+    @SuppressLint("CheckResult")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,30 +72,20 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
         buttonFrom.setOnClickListener(v -> showPopup(true));
         buttonTo.setOnClickListener(v -> showPopup(false));
 
-        editText.setKeyListener(new KeyListener() {
+        editText.addTextChangedListener(new TextWatcher() {
             @Override
-            public int getInputType() {
-                return 0;
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
             }
 
             @Override
-            public boolean onKeyDown(View view, Editable text, int keyCode, KeyEvent event) {
-                return false;
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
             }
 
             @Override
-            public boolean onKeyUp(View view, Editable text, int keyCode, KeyEvent event) {
-                return false;
-            }
-
-            @Override
-            public boolean onKeyOther(View view, Editable text, KeyEvent event) {
-                return false;
-            }
-
-            @Override
-            public void clearMetaKeyState(View view, Editable content, int states) {
-
+            public void afterTextChanged(Editable s) {
+                textView.setText(s);
             }
         });
     }

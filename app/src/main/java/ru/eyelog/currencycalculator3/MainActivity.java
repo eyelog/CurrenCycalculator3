@@ -5,19 +5,26 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.method.KeyListener;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
+import android.widget.TextView;
 
 import com.arellomobile.mvp.MvpAppCompatActivity;
 import com.arellomobile.mvp.presenter.InjectPresenter;
 
 import java.util.List;
 
+import io.reactivex.Observable;
+import io.reactivex.Observer;
 import ru.eyelog.currencycalculator3.adapters.AdapterPopupWindow;
 import ru.eyelog.currencycalculator3.util_net.ValuteTO;
 
@@ -41,11 +48,16 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
     View popupView;
     ListView listView;
 
+    TextView textView;
+    EditText editText;
+
     AdapterPopupWindow adapter;
 
     List<ValuteTO> data, tempData;
     ValuteTO valuteFrom, valuteTo, valuteTemp;
 
+    Observable<Integer> observable;
+    Observer<Integer> observer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +66,8 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
 
         buttonFrom = findViewById(R.id.bt_currentFrom);
         buttonTo = findViewById(R.id.bt_currentTo);
+        textView = findViewById(R.id.textView);
+        editText = findViewById(R.id.etCalc);
 
         presenter.getCurrencyList();
         curPreference = getSharedPreferences(SP_CURRENCY_LOC, Context.MODE_PRIVATE);
@@ -61,6 +75,33 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
 
         buttonFrom.setOnClickListener(v -> showPopup(true));
         buttonTo.setOnClickListener(v -> showPopup(false));
+
+        editText.setKeyListener(new KeyListener() {
+            @Override
+            public int getInputType() {
+                return 0;
+            }
+
+            @Override
+            public boolean onKeyDown(View view, Editable text, int keyCode, KeyEvent event) {
+                return false;
+            }
+
+            @Override
+            public boolean onKeyUp(View view, Editable text, int keyCode, KeyEvent event) {
+                return false;
+            }
+
+            @Override
+            public boolean onKeyOther(View view, Editable text, KeyEvent event) {
+                return false;
+            }
+
+            @Override
+            public void clearMetaKeyState(View view, Editable content, int states) {
+
+            }
+        });
     }
 
     @SuppressLint("InflateParams")
@@ -115,6 +156,8 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
             }
         }
     }
+
+
 
     @Override
     public void setCurses(List<ValuteTO> valuteTOS) {

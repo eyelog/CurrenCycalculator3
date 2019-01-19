@@ -16,23 +16,32 @@ import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.PopupWindow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.arellomobile.mvp.MvpAppCompatActivity;
 import com.arellomobile.mvp.presenter.InjectPresenter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import ru.eyelog.currencycalculator3.adapters.AdapterPopupWindow;
 import ru.eyelog.currencycalculator3.util_net.ValuteTO;
 
-// TODO set default values
 // TODO make counting logic
 // TODO and make some test =)
 public class MainActivity extends MvpAppCompatActivity implements ViewState {
 
-    public static final String SP_CURRENCY_LOC = "curcurrency";
-    public static final String SP_CUR_FROM = "currencyfrom";
-    public static final String SP_CUR_TO = "currencyto";
+    private static final String SP_CURRENCY_LOC = "curcurrency";
+    private static final String SP_CUR_FROM = "currencyfrom";
+    private static final String SP_CUR_TO = "currencyto";
+
+    private static final String DEF_CUR_XMLID = "000";
+    private static final String DEF_CUR_NUMCODE = "000";
+    private static final String DEF_CUR_CHARCODE = "RUR";
+    private static final String DEF_CUR_NOMINAL = "1";
+    private static final String DEF_CUR_NAME = "Российский рубль";
+    private static final String DEF_CUR_VAlUE = "1";
+
 
     @InjectPresenter
     Presenter presenter;
@@ -53,6 +62,9 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
 
     List<ValuteTO> data, tempData;
     ValuteTO valuteFrom, valuteTo, valuteTemp;
+    private boolean filledFields = false;
+    private double curFrom, curTo;
+    private String stOut;
 
     @SuppressLint("CheckResult")
     @Override
@@ -65,9 +77,10 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
         textView = findViewById(R.id.textView);
         editText = findViewById(R.id.etCalc);
 
-        presenter.getCurrencyList();
         curPreference = getSharedPreferences(SP_CURRENCY_LOC, Context.MODE_PRIVATE);
         editor = curPreference.edit();
+
+        presenter.getCurrencyList();
 
         buttonFrom.setOnClickListener(v -> showPopup(true));
         buttonTo.setOnClickListener(v -> showPopup(false));
@@ -85,13 +98,36 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
 
             @Override
             public void afterTextChanged(Editable s) {
-                textView.setText(s);
+
+                if (valuteFrom != null && valuteTo != null) {
+                    filledFields = true;
+                }
+                if (valuteFrom == null) {
+                    Toast.makeText(MainActivity.this, "Не выбрана исходящая валюта.", Toast.LENGTH_SHORT).show();
+                }
+                if (valuteTo == null) {
+                    Toast.makeText(MainActivity.this, "Не выбрана входящая валюта.", Toast.LENGTH_SHORT).show();
+                }
+
+                if (filledFields&&!s.toString().equals("")) {
+
+                    curFrom = getDouble(valuteFrom.getNominal()) *
+                            getDouble(s.toString());
+
+                    curTo = getDouble(valuteTo.getNominal()) *
+                            getDouble(valuteTo.getValue());
+
+                    // TODO badcode todo it good!
+                    stOut = s + " " + valuteFrom.getName() + " = " + curFrom / curTo + " " + valuteTo.getName();
+
+                    textView.setText(stOut);
+                }
             }
         });
     }
 
     @SuppressLint("InflateParams")
-    private void showPopup(boolean doFrom){
+    private void showPopup(boolean doFrom) {
         popupView = LayoutInflater.from(this).inflate(R.layout.popup_cur_list, null);
         popupWindow = new PopupWindow(popupView);
         listView = popupView.findViewById(R.id.listView);
@@ -100,7 +136,7 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.WRAP_CONTENT
         );
-        if(Build.VERSION.SDK_INT>=21) {
+        if (Build.VERSION.SDK_INT >= 21) {
             popupWindow.setElevation(5.0f);
         }
         popupWindow.setFocusable(true);
@@ -109,12 +145,12 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
         listView.setAdapter(adapter);
         listView.setOnItemClickListener((parent, view, position, id) -> {
             String stTempXmlID;
-            if(doFrom){
+            if (doFrom) {
                 valuteFrom = data.get(position);
                 stTempXmlID = valuteFrom.getXmlID();
                 editor.putString(SP_CUR_FROM, stTempXmlID);
                 buttonFrom.setText(valuteFrom.getName());
-            }else {
+            } else {
                 valuteTo = data.get(position);
                 stTempXmlID = valuteTo.getXmlID();
                 editor.putString(SP_CUR_TO, stTempXmlID);
@@ -126,15 +162,14 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
         });
 
         popupWindow.showAtLocation(popupView, Gravity.CENTER, 0, 0);
-//        popupWindow.update();
     }
 
-    private void refreshTheList(boolean doFrom, String xmlID){
+    private void refreshTheList(boolean doFrom, String xmlID) {
         for (int i = 0; i < data.size(); i++) {
-            if(data.get(i).getXmlID().equals(xmlID)){
-                if(doFrom){
+            if (data.get(i).getXmlID().equals(xmlID)) {
+                if (doFrom) {
                     valuteTemp = valuteFrom;
-                }else {
+                } else {
                     valuteTemp = valuteTo;
                 }
                 data.remove(i);
@@ -143,13 +178,43 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
         }
     }
 
+    private void setRUR() {
+        data = new ArrayList<>();
 
+        ValuteTO valuteTO = new ValuteTO(
+                DEF_CUR_XMLID,
+                DEF_CUR_NUMCODE,
+                DEF_CUR_CHARCODE,
+                DEF_CUR_NOMINAL,
+                DEF_CUR_NAME,
+                DEF_CUR_VAlUE
+        );
+
+        data.add(valuteTO);
+    }
 
     @Override
     public void setCurses(List<ValuteTO> valuteTOS) {
-        data = valuteTOS;
-        tempData = valuteTOS;
 
-//        Toast.makeText(this, data.get(0).getName(), Toast.LENGTH_SHORT).show();
+        setRUR();
+
+        if (valuteTOS.size() > 0) {
+            data.addAll(valuteTOS);
+            tempData = data;
+        } else {
+            Toast.makeText(this, "Мировая экономика рухнула, остался только рубль", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private double getDouble(String gotSt) {
+        String stParsed = "";
+
+        for (int i = 0; i < gotSt.length(); i++) {
+            if (!gotSt.substring(i, i + 1).equals("-")) {
+                stParsed += (gotSt.substring(i, i + 1).equals(",") ? "." : gotSt.substring(i, i + 1));
+            }
+        }
+
+        return Double.parseDouble(stParsed);
     }
 }

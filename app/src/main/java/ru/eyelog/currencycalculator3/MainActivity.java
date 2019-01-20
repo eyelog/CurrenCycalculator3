@@ -25,11 +25,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ru.eyelog.currencycalculator3.adapters.AdapterPopupWindow;
+import ru.eyelog.currencycalculator3.presenters.PresenterCount;
+import ru.eyelog.currencycalculator3.presenters.PresenterNet;
 import ru.eyelog.currencycalculator3.util_net.ValuteTO;
+import ru.eyelog.currencycalculator3.views.ViewStateCount;
+import ru.eyelog.currencycalculator3.views.ViewStateNet;
 
 // TODO make counting logic
 // TODO and make some test =)
-public class MainActivity extends MvpAppCompatActivity implements ViewState {
+public class MainActivity extends MvpAppCompatActivity implements ViewStateNet, ViewStateCount {
 
     private static final String SP_CURRENCY_LOC = "curcurrency";
     private static final String SP_CUR_FROM = "currencyfrom";
@@ -44,7 +48,10 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
 
 
     @InjectPresenter
-    Presenter presenter;
+    PresenterNet presenterNet;
+
+    @InjectPresenter
+    PresenterCount presenterCount;
 
     SharedPreferences curPreference;
     SharedPreferences.Editor editor;
@@ -63,8 +70,7 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
     List<ValuteTO> data, tempData;
     ValuteTO valuteFrom, valuteTo, valuteTemp;
     private boolean filledFields = false;
-    private double curFrom, curTo;
-    private String stOut;
+
 
     @SuppressLint("CheckResult")
     @Override
@@ -80,7 +86,7 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
         curPreference = getSharedPreferences(SP_CURRENCY_LOC, Context.MODE_PRIVATE);
         editor = curPreference.edit();
 
-        presenter.getCurrencyList();
+        presenterNet.getCurrencyList();
 
         buttonFrom.setOnClickListener(v -> showPopup(true));
         buttonTo.setOnClickListener(v -> showPopup(false));
@@ -110,17 +116,7 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
                 }
 
                 if (filledFields&&!s.toString().equals("")) {
-
-                    curFrom = getDouble(valuteFrom.getNominal()) *
-                            getDouble(s.toString());
-
-                    curTo = getDouble(valuteTo.getNominal()) *
-                            getDouble(valuteTo.getValue());
-
-                    // TODO badcode todo it good!
-                    stOut = s + " " + valuteFrom.getName() + " = " + curFrom / curTo + " " + valuteTo.getName();
-
-                    textView.setText(stOut);
+                    presenterCount.getOutLine(valuteFrom, valuteTo, s.toString());
                 }
             }
         });
@@ -206,15 +202,8 @@ public class MainActivity extends MvpAppCompatActivity implements ViewState {
         }
     }
 
-    private double getDouble(String gotSt) {
-        String stParsed = "";
-
-        for (int i = 0; i < gotSt.length(); i++) {
-            if (!gotSt.substring(i, i + 1).equals("-")) {
-                stParsed += (gotSt.substring(i, i + 1).equals(",") ? "." : gotSt.substring(i, i + 1));
-            }
-        }
-
-        return Double.parseDouble(stParsed);
+    @Override
+    public void setOutLine(String stOutLine) {
+        textView.setText(stOutLine);
     }
 }

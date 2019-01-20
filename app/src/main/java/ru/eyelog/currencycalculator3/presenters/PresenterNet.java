@@ -1,4 +1,4 @@
-package ru.eyelog.currencycalculator3;
+package ru.eyelog.currencycalculator3.presenters;
 
 import com.arellomobile.mvp.InjectViewState;
 import com.arellomobile.mvp.MvpPresenter;
@@ -9,19 +9,20 @@ import java.util.List;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import ru.eyelog.currencycalculator3.views.ViewStateNet;
 import ru.eyelog.currencycalculator3.util_net.ApiService;
 import ru.eyelog.currencycalculator3.util_net.AppNetConnector;
 import ru.eyelog.currencycalculator3.util_net.ValCurs;
 import ru.eyelog.currencycalculator3.util_net.ValuteTO;
 
 @InjectViewState
-public class Presenter extends MvpPresenter<ViewState> {
+public class PresenterNet extends MvpPresenter<ViewStateNet> {
 
     ApiService apiService;
 
     List<ValuteTO> data;
 
-    public Presenter() {
+    public PresenterNet() {
         apiService = AppNetConnector.getApiService();
     }
 

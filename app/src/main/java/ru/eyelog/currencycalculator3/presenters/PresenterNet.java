@@ -1,19 +1,21 @@
 package ru.eyelog.currencycalculator3.presenters;
 
+import android.annotation.SuppressLint;
+
 import com.arellomobile.mvp.InjectViewState;
 import com.arellomobile.mvp.MvpPresenter;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import ru.eyelog.currencycalculator3.views.ViewStateNet;
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 import ru.eyelog.currencycalculator3.util_net.ApiService;
 import ru.eyelog.currencycalculator3.util_net.AppNetConnector;
 import ru.eyelog.currencycalculator3.util_net.ValCurs;
 import ru.eyelog.currencycalculator3.util_net.ValuteTO;
+import ru.eyelog.currencycalculator3.views.ViewStateNet;
 
 @InjectViewState
 public class PresenterNet extends MvpPresenter<ViewStateNet> {
@@ -26,37 +28,50 @@ public class PresenterNet extends MvpPresenter<ViewStateNet> {
         apiService = AppNetConnector.getApiService();
     }
 
-    public void getCurrencyList(){
+    @SuppressLint("CheckResult")
+    public void getCurrencyList() {
 
-        Call<ValCurs> getValCurs = apiService.getCurrency();
-        getValCurs.enqueue(new Callback<ValCurs>() {
-            @Override
-            public void onResponse(Call<ValCurs> call, Response<ValCurs> response) {
-                if(response.isSuccessful()){
-                    System.out.println("Logcat: " + "Successful");
-                    if(response.body()!=null){
-                        System.out.println("Logcat: " + "response.body()!=null");
-                        ValCurs valCurs = response.body();
-                        data = new ArrayList<>();
-                        for (int i = 0; i < valCurs.getValuteDTOList().size(); i++) {
-                            data.add(valCurs.getValuteDTOList().get(i).getListTO());
-                        }
-
-                        getViewState().setCurses(data);
-
-                    }else {
-                        System.out.println("Logcat: " + "response.body()==null");
+        // Using RxAndroid
+        Observable<ValCurs> getValCurs = apiService.getCurrency();
+        getValCurs.subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(valCurs -> {
+                    data = new ArrayList<>();
+                    for (int i = 0; i < valCurs.getValuteDTOList().size(); i++) {
+                        data.add(valCurs.getValuteDTOList().get(i).getListTO());
                     }
-                }else {
-                    System.out.println("Logcat: " + "UnSuccessful");
-                }
-            }
+                    getViewState().setCurses(data);
+                });
 
-            @Override
-            public void onFailure(Call<ValCurs> call, Throwable t) {
-                System.out.println("Logcat: " + "Failure");
-                System.out.println("Logcat: " + "Throwable " + t);
-            }
-        });
+//        Call<ValCurs> getValCurs = apiService.getCurrency();
+//        getValCurs.enqueue(new Callback<ValCurs>() {
+//            @Override
+//            public void onResponse(Call<ValCurs> call, Response<ValCurs> response) {
+//                if(response.isSuccessful()){
+//                    System.out.println("Logcat: " + "Successful");
+//                    if(response.body()!=null){
+//                        System.out.println("Logcat: " + "response.body()!=null");
+//                        ValCurs valCurs = response.body();
+//                        data = new ArrayList<>();
+//                        for (int i = 0; i < valCurs.getValuteDTOList().size(); i++) {
+//                            data.add(valCurs.getValuteDTOList().get(i).getListTO());
+//                        }
+//
+//                        getViewState().setCurses(data);
+//
+//                    }else {
+//                        System.out.println("Logcat: " + "response.body()==null");
+//                    }
+//                }else {
+//                    System.out.println("Logcat: " + "UnSuccessful");
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<ValCurs> call, Throwable t) {
+//                System.out.println("Logcat: " + "Failure");
+//                System.out.println("Logcat: " + "Throwable " + t);
+//            }
+//        });
     }
 }
